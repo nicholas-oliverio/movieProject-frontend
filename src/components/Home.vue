@@ -12,12 +12,6 @@
     <v-btn size="small" @click="openDetailsMovie(item._id)">
       Info
     </v-btn>
-    <v-btn size="small">
-      Delete
-    </v-btn>
-    <v-btn size="small">
-      Edit
-    </v-btn>
   </template>
   </v-data-table>
 
