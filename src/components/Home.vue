@@ -1,13 +1,61 @@
 
 <template>
 
+
   <v-data-table
   :headers="headers"
-  :items="movie"
+  :items="filteredMovies"  
   :items-per-page="30"
   fixed-header          
-  height="745px" 
+  height="500px" 
   >
+  <template #top>
+    <v-toolbar flat style="background-color: #212121;">
+      <v-toolbar-title>MOVIE LIST</v-toolbar-title>
+      <v-spacer />
+      <v-text-field
+        v-model="q"
+        density="compact"
+        hide-details
+        clearable
+        placeholder="Cerca per titolo"
+        prepend-inner-icon="mdi-magnify"
+        class="mr-2"
+        style="max-width: 300px"
+      />
+      <v-menu v-model="filterMenu" :close-on-content-click="false" transition="scale-transition">
+        <template #activator="{ props }">
+          <v-btn v-bind="props" prepend-icon="mdi-filter-variant" variant="tonal">
+            Filtri
+          </v-btn>
+        </template>
+        <v-card min-width="320">
+          <v-card-text>
+            <v-select
+              v-model="genresFilter"
+              :items="allGenres"
+              label="Genere"
+              multiple
+              chips
+              clearable
+              hide-details
+              density="comfortable"
+              class="mb-3"
+            />
+            <div class="d-flex ga-2">
+              <v-text-field v-model.number="yearFrom" type="number" label="Anno da" hide-details density="comfortable"/>
+              <v-text-field v-model.number="yearTo"   type="number" label="Anno a"   hide-details density="comfortable"/>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn variant="text" @click="clearFilters">Reset</v-btn>
+            <v-spacer />
+            <v-btn color="primary" @click="filterMenu = false">Applica</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-menu>
+    </v-toolbar>
+  </template>
    <template #item.action="{ item }">
     <v-btn size="small" @click="openDetailsMovie(item._id)">
       Info
@@ -15,14 +63,59 @@
   </template>
   </v-data-table>
 
-  <v-dialog v-model="dialog">
-   <v-card>
-   
-      <v-card-title>{{detail?.title}}</v-card-title>
-      <p>{{ detail?.poster }}</p>
-      <v-btn text="Close" @click="dialog=false"></v-btn>
+  <v-dialog
+  v-model="dialog"
+  max-width="800"
+  persistent
+>
+  <v-card class="modalContainer">
+    <div class="content">
+      <!-- Pannello testo a sinistra -->
+      <section class="left">
+        <h2 class="title">{{ detail?.title }}</h2>
+
+      <div class="meta" v-if="detail">
+      <div class="label">Genres</div>
+        <div class="value">
+          Commedy
+        </div>
+      </div>
+
+        <div class="meta">
+          <div class="label">Anno di uscita</div>
+          <div class="value">{{ detail?.year ?? '—' }}</div>
+        </div>
+
+        <div class="description">
+          <div class="label">Descrizione</div>
+          <p>{{ detail?.fullplot || 'Nessuna descrizione disponibile.' }}</p>
+        </div>
+
+        <small class="updated">
+          Ultima modifica:
+          07.09.2025 - 23:02
+        </small>
+
+        <!-- bottone attaccato al fondo -->
+        <v-card-actions class="actions">
+          <v-btn color="primary" variant="text" @click="dialog = false">
+            Chiudi
+          </v-btn>
+        </v-card-actions>
+      </section>
+
+      <!-- Immagine a destra -->
+      <aside class="right">
+        <v-img
+          :src="poster || '/fallback.jpg'"
+          class="poster"
+          cover
+        />
+      </aside>
+    </div>
   </v-card>
-  </v-dialog>
+</v-dialog>
+
 </template>
 
 
@@ -37,20 +130,68 @@ const headers = [
     title:'Title' , key: 'title'
   },
   {
-    title:'Year' , key: 'year'
+    title:'Year' , key: 'year' 
   },
   {
-    title:'Cast' , key: 'cast'
-  },
-  {
-    title:'Action' , key: 'action',sortable: false
+    title:'Action' , key: 'action', sortable: false
   },
 ]
 
+const q = ref('')
+const filterMenu = ref(false)
+const genresFilter = ref([])
+const yearFrom = ref()
+const yearTo   = ref()
 const detail = ref(null)
 const dialog = ref(false)
 const movie = computed (() =>  respMovie.value?.data ?? [])
 const respMovie = ref(null)
+const poster = ref('')
+
+const allGenres = computed(() => {
+  const set = new Set()
+  for (const m of movie.value) {
+    const gs = Array.isArray(m.genres)
+      ? m.genres
+      : typeof m.genres === 'string'
+        ? m.genres.split(',').map(s => s.trim())
+        : []
+    gs.forEach(g => g && set.add(g))
+  }
+  return Array.from(set).sort()
+})
+
+const normalize = s => (s ?? '').toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+
+const filteredMovies = computed(() => {
+  const needle = normalize(q.value)
+  return movie.value.filter(m => {
+    const titleOk  = normalize(m.title).includes(needle)
+    const genres   = Array.isArray(m.genres)
+      ? m.genres
+      : typeof m.genres === 'string' ? m.genres.split(',').map(s => s.trim()) : []
+    const genresOk = genres.some(g => normalize(g).includes(needle))
+    const yearOk   = String(m.year ?? '').includes(q.value.trim())
+    const textOk   = !needle || titleOk || genresOk || yearOk
+
+    const rangeOk =
+      (yearFrom.value == null || (m.year ?? 0) >= yearFrom.value) &&
+      (yearTo.value   == null || (m.year ?? 9999) <= yearTo.value)
+
+    const genreFilterOk =
+      !genresFilter.value.length ||
+      genresFilter.value.every(g => genres.includes(g))
+
+    return textOk && rangeOk && genreFilterOk
+  })
+})
+
+function clearFilters() {
+  q.value = ''
+  genresFilter.value = []
+  yearFrom.value = undefined
+  yearTo.value = undefined
+}
 
 onMounted( async () =>{
   try {
@@ -66,12 +207,14 @@ onMounted( async () =>{
 
 async function openDetailsMovie(id){
   if(!id) return
-  dialog.value = true
+  
   detail.value = null
   try{
     const {data} = await api.get(`/movieList/${id}`)
     detail.value = data?.data ?? data
-    console.log(detail.value?.title)
+    poster.value = detail.value?.poster
+    console.log(poster)
+    dialog.value = true
   }catch(err){
     console.error('errore nel recupero dei dettagli',err)
   }
@@ -79,5 +222,92 @@ async function openDetailsMovie(id){
 
 </script>
 <style scoped>
+/* scoped */
+.modalContainer {
+  padding: 16px;                 /* bordi/padding uguali: sopra, sotto, sinistra, destra */
+  border-radius: 16px;
+}
+
+.content {
+  display: flex;
+  gap: 16px;                     /* spazio tra testo e immagine */
+  align-items: stretch;          /* allinea l'immagine all’altezza del contenuto */
+  max-height: 600px;             /* limite di altezza come desiderato */
+}
+
+.left {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column; /* colonna per spingere il bottone in basso */
+  gap: 12px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.label {
+  color: rgba(223, 223, 223, 0.6);
+  font-weight: 600;
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.description p {
+  margin: 4px 0 0 0;
+  line-height: 1.45;
+}
+
+.updated {
+  margin-top: auto;              /* spinge la riga in fondo alla colonna */
+  display: block;
+  color: rgba(239, 239, 239, 0.6);
+  font-size: .8rem;
+}
+
+/* Colonna immagine a destra */
+.right {
+  width: 320px;                  /* larghezza poster; regola a piacere */
+  max-width: 45%;
+  display: flex;
+  align-items: center;
+}
+
+.poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;           /* mantiene proporzioni locandina */
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+}
+.actions {
+  margin-top: auto;        /* spinge il blocco in fondo */
+  justify-content: flex-start; /* bottone a sinistra */
+  padding-left: 0;         /* opzionale: elimina padding extra */
+}
+
+/* Responsivo: su schermi piccoli impila i blocchi */
+@media (max-width: 700px) {
+  .content {
+    flex-direction: column-reverse; /* immagine sotto, testo sopra */
+  }
+  .right {
+    width: 100%;
+    max-width: 100%;
+  }
+}
 
 </style>
