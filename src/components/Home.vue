@@ -7,10 +7,10 @@
   :items="filteredMovies"  
   :items-per-page="30"
   fixed-header          
-  height="500px" 
+  height="692px" 
   >
   <template #top>
-    <v-toolbar flat style="background-color: #212121;">
+    <v-toolbar flat style="background-color: #212121; display:flex ; flex-direction: row; justify-content: space-between;">
       <v-toolbar-title>MOVIE LIST</v-toolbar-title>
       <v-spacer />
       <v-text-field
@@ -25,9 +25,14 @@
       />
       <v-menu v-model="filterMenu" :close-on-content-click="false" transition="scale-transition">
         <template #activator="{ props }">
-          <v-btn v-bind="props" prepend-icon="mdi-filter-variant" variant="tonal">
+           <div class="d-flex ga-2">
+          <v-btn v-bind="props" prepend-icon="mdi-filter-variant" variant="tonal" class="mr-5">
             Filtri
           </v-btn>
+          <v-btn v-if=adminDash variant="tonal" class="mr-5">
+            ADD
+          </v-btn>
+          </div>
         </template>
         <v-card min-width="320">
           <v-card-text>
@@ -70,7 +75,7 @@
 >
   <v-card class="modalContainer">
     <div class="content">
-      <!-- Pannello testo a sinistra -->
+ 
       <section class="left">
         <h2 class="title">{{ detail?.title }}</h2>
 
@@ -96,15 +101,21 @@
           07.09.2025 - 23:02
         </small>
 
-        <!-- bottone attaccato al fondo -->
+
         <v-card-actions class="actions">
           <v-btn color="primary" variant="text" @click="dialog = false">
-            Chiudi
+            Close
+          </v-btn>
+            <v-btn color="warning" variant="text" @click="">
+            Edit
+          </v-btn>
+            <v-btn  color="error" variant="text" @click="openDelete(detail)">
+            Delete
           </v-btn>
         </v-card-actions>
       </section>
 
-      <!-- Immagine a destra -->
+ 
       <aside class="right">
         <v-img
           :src="poster || '/fallback.jpg'"
@@ -115,6 +126,22 @@
     </div>
   </v-card>
 </v-dialog>
+
+ <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">
+          Conferma eliminazione
+        </v-card-title>
+        <v-card-text>
+          Vuoi davvero eliminare <strong>{{ movieToDelete?.title }}</strong>?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="deleteDialog = false">Annulla</v-btn>
+          <v-btn color="error" @click="confirmDelete(movieToDelete?._id),deleteDialog=false,dialog=false">Elimina</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
 </template>
 
@@ -147,6 +174,10 @@ const dialog = ref(false)
 const movie = computed (() =>  respMovie.value?.data ?? [])
 const respMovie = ref(null)
 const poster = ref('')
+const adminDash = ref(false)
+const deleteDialog = ref(false);
+const movieToDelete = ref(null);
+
 
 const allGenres = computed(() => {
   const set = new Set()
@@ -194,6 +225,10 @@ function clearFilters() {
 }
 
 onMounted( async () =>{
+  getMovies()
+})
+
+async function getMovies() {
   try {
     const resMovie = await api.get('/movieList')
     respMovie.value = resMovie.data
@@ -203,7 +238,27 @@ onMounted( async () =>{
   } catch (err) {
     console.error('Errore fetch:', err)
   }
-})
+}
+
+function openDelete(movie) {
+  movieToDelete.value = movie;
+  deleteDialog.value = true;
+}
+
+async function confirmDelete(id) {
+  if(!id) return
+  try{
+  const {data} = await api.delete(`/movieList/${id}`)
+  getMovies()
+  if(!data){
+    console.log('Movie not found', data)
+  }
+  console.log('Movie succesful deleted', data)
+  }catch(err){
+    console.error(err)
+  }
+}
+
 
 async function openDetailsMovie(id){
   if(!id) return
@@ -222,23 +277,23 @@ async function openDetailsMovie(id){
 
 </script>
 <style scoped>
-/* scoped */
+
 .modalContainer {
-  padding: 16px;                 /* bordi/padding uguali: sopra, sotto, sinistra, destra */
+  padding: 16px;               
   border-radius: 16px;
 }
 
 .content {
   display: flex;
-  gap: 16px;                     /* spazio tra testo e immagine */
-  align-items: stretch;          /* allinea l'immagine all’altezza del contenuto */
-  max-height: 600px;             /* limite di altezza come desiderato */
+  gap: 16px;                    
+  align-items: stretch;        
+  max-height: 600px;           
 }
 
 .left {
   flex: 1 1 0;
   display: flex;
-  flex-direction: column; /* colonna per spingere il bottone in basso */
+  flex-direction: column; 
   gap: 12px;
   min-width: 0;
 }
@@ -273,15 +328,15 @@ async function openDetailsMovie(id){
 }
 
 .updated {
-  margin-top: auto;              /* spinge la riga in fondo alla colonna */
+  margin-top: auto;            
   display: block;
   color: rgba(239, 239, 239, 0.6);
   font-size: .8rem;
 }
 
-/* Colonna immagine a destra */
+
 .right {
-  width: 320px;                  /* larghezza poster; regola a piacere */
+  width: 320px;                  
   max-width: 45%;
   display: flex;
   align-items: center;
@@ -289,20 +344,20 @@ async function openDetailsMovie(id){
 
 .poster {
   width: 100%;
-  aspect-ratio: 2 / 3;           /* mantiene proporzioni locandina */
+  aspect-ratio: 2 / 3;          
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,.08);
 }
 .actions {
-  margin-top: auto;        /* spinge il blocco in fondo */
-  justify-content: flex-start; /* bottone a sinistra */
-  padding-left: 0;         /* opzionale: elimina padding extra */
+  margin-top: auto;        
+  justify-content: flex-start; 
+  padding-left: 0;       
 }
 
-/* Responsivo: su schermi piccoli impila i blocchi */
+
 @media (max-width: 700px) {
   .content {
-    flex-direction: column-reverse; /* immagine sotto, testo sopra */
+    flex-direction: column-reverse; 
   }
   .right {
     width: 100%;
