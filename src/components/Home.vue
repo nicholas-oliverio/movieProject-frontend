@@ -1,7 +1,7 @@
-
 <template>
-
-
+<!-- ---------------- -->
+<!-- TABLE PRINCIPALE -->
+<!-- ---------------- -->
   <v-data-table
   :headers="headers"
   :items="filteredMovies"  
@@ -18,6 +18,7 @@
         density="compact"
         hide-details
         clearable
+        @click:clear="clearFilters"
         placeholder="Cerca per titolo"
         prepend-inner-icon="mdi-magnify"
         class="mr-2"
@@ -29,24 +30,13 @@
           <v-btn v-bind="props" prepend-icon="mdi-filter-variant" variant="tonal" class="mr-5">
             Filtri
           </v-btn>
-          <v-btn v-if=adminDash variant="tonal" class="mr-5">
-            ADD
+          <v-btn  variant="tonal" class="mr-5" @click="openAdd">
+            Add
           </v-btn>
           </div>
         </template>
         <v-card min-width="320">
           <v-card-text>
-            <v-select
-              v-model="genresFilter"
-              :items="allGenres"
-              label="Genere"
-              multiple
-              chips
-              clearable
-              hide-details
-              density="comfortable"
-              class="mb-3"
-            />
             <div class="d-flex ga-2">
               <v-text-field v-model.number="yearFrom" type="number" label="Anno da" hide-details density="comfortable"/>
               <v-text-field v-model.number="yearTo"   type="number" label="Anno a"   hide-details density="comfortable"/>
@@ -60,6 +50,10 @@
         </v-card>
       </v-menu>
     </v-toolbar>
+
+<!-- ---------------- -->
+<!--    INFO MOVIE    -->
+<!-- ---------------- -->
   </template>
    <template #item.action="{ item }">
     <v-btn size="small" @click="openDetailsMovie(item._id)">
@@ -68,45 +62,43 @@
   </template>
   </v-data-table>
 
-  <v-dialog
-  v-model="dialog"
-  max-width="800"
-  persistent
->
+<!-- ---------------- -->
+<!---DIALOG INFO MOVIE-->
+<!-- ---------------- -->
+
+  <v-dialog v-model="dialog" max-width="800">
   <v-card class="modalContainer">
     <div class="content">
- 
       <section class="left">
         <h2 class="title">{{ detail?.title }}</h2>
-
       <div class="meta" v-if="detail">
       <div class="label">Genres</div>
         <div class="value">
-          Commedy
+          Drama
         </div>
       </div>
-
         <div class="meta">
           <div class="label">Anno di uscita</div>
           <div class="value">{{ detail?.year ?? '—' }}</div>
         </div>
-
         <div class="description">
           <div class="label">Descrizione</div>
           <p>{{ detail?.fullplot || 'Nessuna descrizione disponibile.' }}</p>
         </div>
-
         <small class="updated">
           Ultima modifica:
           07.09.2025 - 23:02
         </small>
 
+                  <!---------------------------------->
+                  <!--- CLOSE ---- EDIT ---- DELETE -->
+                  <!---------- X INFO MOVIE ---------->
 
         <v-card-actions class="actions">
           <v-btn color="primary" variant="text" @click="dialog = false">
             Close
           </v-btn>
-            <v-btn color="warning" variant="text" @click="">
+            <v-btn color="warning" variant="text" @click="openEdit(detail)">
             Edit
           </v-btn>
             <v-btn  color="error" variant="text" @click="openDelete(detail)">
@@ -114,8 +106,6 @@
           </v-btn>
         </v-card-actions>
       </section>
-
- 
       <aside class="right">
         <v-img
           :src="poster || '/fallback.jpg'"
@@ -126,6 +116,10 @@
     </div>
   </v-card>
 </v-dialog>
+
+<!-- ----------------- -->
+<!--DELETE MOVIE DIALOG-->
+<!-- ----------------- -->
 
  <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
@@ -143,15 +137,77 @@
       </v-card>
     </v-dialog>
 
+<!-- --------------------------- -->
+<!--    EDIT ADD MOVIE DIALOG    -->
+<!-- --------------------------- -->
+
+    <v-dialog v-model="formEditAddDialog" max-width="600">
+    <v-card>
+      <v-card-title>
+        <span class="text-h6">
+          {{ isNew ? 'Add Movie' : 'Edit Movie'}}
+        </span>
+      </v-card-title>
+      <v-card-text>
+        <v-form ref="form">
+        <input type="hidden" :value="editForm._id" />
+        <v-text-field
+          v-model="editForm.title"
+          label="Title"
+          clearable
+          :rules="titleRules"
+        />
+
+        <v-text-field
+          v-model="editForm.fullplot"
+          label="Description"
+          clearable
+          :rules="fullplotRules"
+        />
+        <v-text-field
+          v-model="editForm.year"
+          label="Year"
+          type="number"
+          :rules="yearRules"
+          clearable
+        />
+        </v-form>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text @click="formEditAddDialog = false">Cancel</v-btn>
+        <v-btn color="primary" @click="editConfirm()">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+<!-- ----------------- -->
+<!-- ----------------- -->
+
+ <v-snackbar v-model="snackbar" color="red" timeout="3000">
+  {{ snackbarMessage }}
+</v-snackbar>
+
 </template>
 
 
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+//------------------------------         IMPORT        -----------------------------------
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+import { ref, onMounted, computed,reactive } from 'vue'
 import api from '@/axios'
 
 
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+//------------------------------    CONST-VAR-ARRAY    -----------------------------------
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+
+//CONST HEADERS DATA TABLE KEY AND VALUE
 const headers = [
   {
     title:'Title' , key: 'title'
@@ -164,33 +220,74 @@ const headers = [
   },
 ]
 
-const q = ref('')
+const emptyMovie = () => ({
+  _id: undefined,
+  title: '',
+  fullplot: '',
+  year: '',
+})
+const editForm = reactive(emptyMovie())
+
+const currentYear = new Date().getFullYear()
+//RULES FOR V-TEXT
+const form = ref(null)
+async function isFormValid() {
+  const res = form.value?.validate?.()
+ 
+  if (res && typeof res.then === 'function') {
+    const { valid } = await res
+    return !!valid
+  }
+  return !!res
+}
+const snackbar = ref(false)
+const snackbarMessage = ref('')
+const titleRules = [
+  v => !!v || 'The title is mandatory',
+  v => (v && v.length >= 3) || 'Min 3 characters',
+  v => (v && v.length <= 100) || 'Max 100 characters'
+]
+const fullplotRules = [
+  v => !!v || 'The description is mandatory',
+  v => (v && v.length >= 10) || 'Min 10 characters',
+  v => (v && v.length <= 500) || 'Max 500 characters'
+]
+const yearRules = [
+  v => !!v || 'The year is mandatory',
+  v => /^\d+$/.test(v) || 'must be a number',
+  v => (v >= 1888 && v <= currentYear) || `must be between 1888 and ${currentYear}`
+]
+//CONST FOR POPULATE DATA TABLE WITHOUT FILTER
+const movie = computed (() =>  respMovie.value?.data ?? [])
+
+//CONST FOR POPULATE
+const detail = ref(null)
+const movieToDelete = ref(null);
+const respMovie = ref(null)
+const isNew = ref(false)
+//CONST X OPEN DIALOG -- GENERAL INFO MOVIE --- DELETE CONFIRM --- EDIT AND ADD FORM ---
+const dialog = ref(false)
+const deleteDialog = ref(false);
+const formEditAddDialog = ref(false);
+//CONST X OPEN DIALOG FILTER
 const filterMenu = ref(false)
+//CONST FOR FILTER
+const q = ref('')
 const genresFilter = ref([])
 const yearFrom = ref()
 const yearTo   = ref()
-const detail = ref(null)
-const dialog = ref(false)
-const movie = computed (() =>  respMovie.value?.data ?? [])
-const respMovie = ref(null)
 const poster = ref('')
-const adminDash = ref(false)
-const deleteDialog = ref(false);
-const movieToDelete = ref(null);
 
 
-const allGenres = computed(() => {
-  const set = new Set()
-  for (const m of movie.value) {
-    const gs = Array.isArray(m.genres)
-      ? m.genres
-      : typeof m.genres === 'string'
-        ? m.genres.split(',').map(s => s.trim())
-        : []
-    gs.forEach(g => g && set.add(g))
-  }
-  return Array.from(set).sort()
-})
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+//-----------------------          START FUNCTION-API       ------------------------------
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+
+//---------------
+//FILTER FUNCTION
+//---------------
 
 const normalize = s => (s ?? '').toString().normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 
@@ -198,12 +295,8 @@ const filteredMovies = computed(() => {
   const needle = normalize(q.value)
   return movie.value.filter(m => {
     const titleOk  = normalize(m.title).includes(needle)
-    const genres   = Array.isArray(m.genres)
-      ? m.genres
-      : typeof m.genres === 'string' ? m.genres.split(',').map(s => s.trim()) : []
-    const genresOk = genres.some(g => normalize(g).includes(needle))
     const yearOk   = String(m.year ?? '').includes(q.value.trim())
-    const textOk   = !needle || titleOk || genresOk || yearOk
+    const textOk   = !needle || titleOk || yearOk
 
     const rangeOk =
       (yearFrom.value == null || (m.year ?? 0) >= yearFrom.value) &&
@@ -214,7 +307,7 @@ const filteredMovies = computed(() => {
       genresFilter.value.every(g => genres.includes(g))
 
     return textOk && rangeOk && genreFilterOk
-  })
+  })  
 })
 
 function clearFilters() {
@@ -222,12 +315,18 @@ function clearFilters() {
   genresFilter.value = []
   yearFrom.value = undefined
   yearTo.value = undefined
+   getMovies()
 }
 
 onMounted( async () =>{
   getMovies()
 })
 
+//--------------------------------------------------------
+//----API CRUD ( GET - DELETE - POST - PATCH ) -----------
+//--------------------------------------------------------
+
+//API GET FOR ALL MOVIES
 async function getMovies() {
   try {
     const resMovie = await api.get('/movieList')
@@ -239,27 +338,7 @@ async function getMovies() {
     console.error('Errore fetch:', err)
   }
 }
-
-function openDelete(movie) {
-  movieToDelete.value = movie;
-  deleteDialog.value = true;
-}
-
-async function confirmDelete(id) {
-  if(!id) return
-  try{
-  const {data} = await api.delete(`/movieList/${id}`)
-  getMovies()
-  if(!data){
-    console.log('Movie not found', data)
-  }
-  console.log('Movie succesful deleted', data)
-  }catch(err){
-    console.error(err)
-  }
-}
-
-
+//API GET FOR SINGLE MOVIE WITH ID
 async function openDetailsMovie(id){
   if(!id) return
   
@@ -275,7 +354,85 @@ async function openDetailsMovie(id){
   }
 }
 
+//API DELETE FOR SINGLE MOVIE
+function openDelete(movie) {
+  movieToDelete.value = movie;
+  deleteDialog.value = true;
+}
+async function confirmDelete(id) {
+  if(!id) return
+  try{
+  const {data} = await api.delete(`/movieList/${id}`)
+  getMovies()
+  if(!data){
+    console.log('Movie not found', data)
+  }
+  console.log('Movie succesful deleted', data)
+  }catch(err){
+    console.error(err)
+  }
+}
+
+//API EDIT OR ADD FOR MOVIE LIST
+async function openAdd() {
+  isNew.value = true 
+  Object.assign(editForm, emptyMovie())
+  formEditAddDialog.value = true
+}
+async function openEdit(item) {
+  if(!item._id) return
+  isNew.value = false 
+  formEditAddDialog.value = true
+  console.log(item.year)
+  fillForm(item)
+}
+function fillForm(item){
+  editForm._id = item._id
+  editForm.title = item.title
+  editForm.fullplot = item.fullplot
+  editForm.year = item.year
+
+}
+async function editConfirm() {
+  try {
+    const valid = await isFormValid()
+    if (!valid) {
+      snackbarMessage.value = 'Errore: controlla i campi prima di continuare'
+      snackbar.value = true
+      return
+    }
+    const payload = {
+      title: editForm.title,
+      fullplot: editForm.fullplot,
+      year: editForm.year != null && editForm.year !== '' ? Number(editForm.year) : null,
+    }
+    if (isNew.value) {
+      const { data } = await api.post(`/addMovie/`, payload)
+      const created = data?.data ?? data
+      detail.value = created
+      formEditAddDialog.value = false
+      dialog.value = true
+      await getMovies()
+    } else {
+      const id = editForm._id
+      if (!id) throw new Error('ID mancante per update')
+      await api.patch(`/editMovie/${id}`, payload)
+      if (dialog.value && detail.value?._id === id) {
+        detail.value = { ...detail.value, ...payload }
+      }
+      formEditAddDialog.value = false
+      await getMovies()
+    }
+  } catch (err) {
+    console.error(err)
+    snackbarMessage.value = err?.response?.data?.message || err?.message || 'Errore imprevisto'
+    snackbar.value = true
+  }
+}
+
+
 </script>
+
 <style scoped>
 
 .modalContainer {

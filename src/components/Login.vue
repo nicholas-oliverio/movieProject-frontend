@@ -65,11 +65,9 @@ const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const error = ref('')
-
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-
 
 
 const doLogin = async () => {
