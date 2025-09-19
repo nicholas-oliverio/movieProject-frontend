@@ -6,8 +6,10 @@
   :headers="headers"
   :items="filteredMovies"  
   :items-per-page="30"
+  :items-per-page-options="[ 30, 50 , 100 ]" 
   fixed-header          
   height="692px" 
+  class="movie-table"
   >
   <template #top>
     <v-toolbar flat style="background-color: #212121; display:flex ; flex-direction: row; justify-content: space-between;">
@@ -209,17 +211,10 @@ import api from '@/axios'
 
 //CONST HEADERS DATA TABLE KEY AND VALUE
 const headers = [
-  {
-    title:'Title' , key: 'title'
-  },
-  {
-    title:'Year' , key: 'year' 
-  },
-  {
-    title:'Action' , key: 'action', sortable: false
-  },
+  { title: 'Title',  key: 'title',  width: '250px' },
+  { title: 'Year',   key: 'year',   width: '100px', align: 'center' },
+  { title: 'Action', key: 'action', sortable: false, width: '120px' },
 ]
-
 const emptyMovie = () => ({
   _id: undefined,
   title: '',
@@ -509,6 +504,38 @@ async function editConfirm() {
   margin-top: auto;        
   justify-content: flex-start; 
   padding-left: 0;       
+}
+
+.movie-table table {
+  table-layout: fixed;      
+}
+
+.movie-table th,
+.movie-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.movie-table th:nth-child(1),
+.movie-table td:nth-child(1) { width: 250px; }
+
+.movie-table th:nth-child(2),
+.movie-table td:nth-child(2) { width: 100px; text-align: center; }
+
+.movie-table th:nth-child(3),
+.movie-table td:nth-child(3) { width: 120px; }
+
+.col-title {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.col-year {
+  text-align: center;
+  width: 100px;
 }
 
 
