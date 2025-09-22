@@ -21,7 +21,6 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer />
         <v-btn variant="text" @click="dialog=false">Chiudi</v-btn>
       </v-card-actions>
     </v-card>
@@ -55,7 +54,7 @@ async function openDetailsProfile() {
   detail.value = null;
   try {
     const { data } = await api.get("/me");
-    detail.value = data.data || data; 
+    detail.value = data.data; 
 
   } catch (err) {
     console.error("Errore profilo:", err);

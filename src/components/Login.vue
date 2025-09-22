@@ -51,7 +51,7 @@
 </template>
 
 
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/axios'
@@ -82,9 +82,9 @@ const doLogin = async () => {
     auth.login(res.data.token)
 
 
-    const back = (route.query.redirect as string) || '/'
+    const back = (route.query.redirect) || '/'
     await router.replace(back)
-  } catch (e: any) {
+  } catch (e) {
     error.value = e?.response?.data?.msg || 'Credenziali non valide'
   } finally {
     loading.value = false

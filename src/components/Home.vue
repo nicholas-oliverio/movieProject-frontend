@@ -297,11 +297,8 @@ const filteredMovies = computed(() => {
       (yearFrom.value == null || (m.year ?? 0) >= yearFrom.value) &&
       (yearTo.value   == null || (m.year ?? 9999) <= yearTo.value)
 
-    const genreFilterOk =
-      !genresFilter.value.length ||
-      genresFilter.value.every(g => genres.includes(g))
 
-    return textOk && rangeOk && genreFilterOk
+    return textOk && rangeOk
   })  
 })
 
@@ -313,7 +310,7 @@ function clearFilters() {
    getMovies()
 }
 
-onMounted( async () =>{
+onMounted(() =>{
   getMovies()
 })
 
@@ -341,8 +338,6 @@ async function openDetailsMovie(id){
   try{
     const {data} = await api.get(`/movieList/${id}`)
     detail.value = data?.data ?? data
-    poster.value = detail.value?.poster
-    console.log(poster)
     dialog.value = true
   }catch(err){
     console.error('errore nel recupero dei dettagli',err)
@@ -380,6 +375,7 @@ async function openEdit(item) {
   formEditAddDialog.value = true
   console.log(item.year)
   fillForm(item)
+  //const a = { '_id' : item._id ,... }
 }
 function fillForm(item){
   editForm._id = item._id
