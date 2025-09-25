@@ -8,9 +8,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppFooter: typeof import('./src/components/AppFooter.vue')['default']
-    AppHeader: typeof import('./src/components/AppHeader.vue')['default']
-    Home: typeof import('./src/components/Home.vue')['default']
+    AppFooter: typeof import('./src/components/layout/AppFooter.vue')['default']
+    AppHeader: typeof import('./src/components/layout/AppHeader.vue')['default']
+    DialogConfirm: typeof import('./src/components/movie/DialogConfirm.vue')['default']
+    DialogfORMMovie: typeof import('./src/components/movie/DialogFormMovie.vue')['default']
+    DialogFormMovie: typeof import('./src/components/movie/DialogFormMovie.vue')['default']
+    DialogInfoMovie: typeof import('./src/components/movie/DialogInfoMovie.vue')['default']
+    DialogMovie: typeof import('./src/components/movie/DialogFormMovie.vue')['default']
+    Home: typeof import('./src/components/movie/Home.vue')['default']
     Login: typeof import('./src/components/Login.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

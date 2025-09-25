@@ -3,12 +3,11 @@ import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 
 const api = axios.create({
-  baseURL: "http://localhost:3000", // backend Express
+  baseURL: "http://localhost:3000", 
   timeout: 5000,
   headers: { 'Content-Type': 'application/json' }
 });
 
-// Interceptor: aggiunge token se presente
 api.interceptors.request.use((config) => {
   const auth = useAuthStore?.();
   const token = auth?.token || localStorage.getItem("token");

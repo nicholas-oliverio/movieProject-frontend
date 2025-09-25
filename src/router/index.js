@@ -13,7 +13,6 @@ const router = createRouter({
   routes: setupLayouts(routes),
 })
 
-// ---- utils JWT (JS) ----
 function parseJwt(token) {
   try {
     const base64 = token.split('.')[1]
@@ -30,22 +29,18 @@ function isTokenValid(token) {
   return p.exp * 1000 > Date.now()
 }
 
-// Rotte pubbliche sempre accessibili
 const PUBLIC_PATHS = ['/login', '/register']
 
-// Guard globale
 router.beforeEach((to) => {
   const auth = useAuthStore()
   const valid = isTokenValid(auth.token)
   const isPublic = PUBLIC_PATHS.includes(to.path)
 
   if (isPublic) {
-    // già autenticato? evita di rivedere /login
     if (valid && to.path === '/login') return { path: '/' }
     return true
   }
 
-  // se la pagina richiede auth o vuoi forzare tutto tranne le public
   const requires = to.meta?.requiresAuth ?? true
   if (requires && !valid) {
     return { path: '/login', query: { redirect: to.fullPath } }
@@ -54,7 +49,6 @@ router.beforeEach((to) => {
   return true
 })
 
-// Workaround per https://github.com/vitejs/vite/issues/11804
 router.onError((err, to) => {
   if (err?.message?.includes?.('Failed to fetch dynamically imported module')) {
     if (localStorage.getItem('vuetify:dynamic-reload')) {
