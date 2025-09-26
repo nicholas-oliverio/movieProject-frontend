@@ -1,20 +1,19 @@
 <route lang="yaml">
-  path: /
-  meta:
+path: /movie
+meta:
   requiresAuth: true
 </route>
-
 <template>
   <div className="flex flex-col min-h-screen">
     <AppHeader />
       <div className="flex-1 overflow-auto p-4">
-        <Home />
+        <Movie />
       </div>
     <AppFooter />
   </div>
 </template>
 
 <script setup>
-import Home from '@/components/Home.vue';
+import Movie from '@/components/movie/Movie.vue';
 
 </script>

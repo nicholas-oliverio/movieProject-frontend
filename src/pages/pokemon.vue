@@ -1,5 +1,5 @@
 <route lang="yaml">
-  path: /
+  path: /pokemon
   meta:
   requiresAuth: true
 </route>
@@ -8,13 +8,13 @@
   <div className="flex flex-col min-h-screen">
     <AppHeader />
       <div className="flex-1 overflow-auto p-4">
-        <Home />
+        <Pokemon />
       </div>
     <AppFooter />
   </div>
 </template>
 
 <script setup>
-import Home from '@/components/Home.vue';
+import Pokemon from '@/components/pokemon/Pokemon.vue';
 
 </script>

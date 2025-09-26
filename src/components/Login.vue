@@ -54,7 +54,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/axios'
+import {api} from '@/axios'
 import { useAuthStore } from '@/stores/auth'
 
 

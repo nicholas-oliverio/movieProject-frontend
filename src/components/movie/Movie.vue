@@ -4,7 +4,8 @@
   :items="movies"  
   :items-per-page="30"
   :items-per-page-options="[ 30, 50 , 100 ]" 
-  fixed-header          
+  fixed-header
+  fixed-footer        
   height="692px" 
   class="movie-table"
   >
@@ -70,7 +71,7 @@
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue';
-import api from '@/axios'
+import {api}  from '@/axios'
 import DialogInfoMovie from './DialogInfoMovie.vue';
 import DialogFormMovie from './DialogFormMovie.vue';
 

@@ -2,9 +2,11 @@
   <v-app-bar>
     <v-toolbar-title>Plime Video</v-toolbar-title>
     <v-spacer />
+    <v-btn variant="text" :to="{ path: '/' }">Home</v-btn>
+    <v-btn variant="text" :to="{ path: '/pokemon' }">Pokemon</v-btn>
+    <v-btn variant="text" :to="{ path: '/movie' }">Movie</v-btn>
 
-    <v-btn v-if="!isAuthed" variant="text" :to="{ path: '/login' }">Login</v-btn>
-    <v-btn v-else variant="text" @click="doLogout">Logout</v-btn>
+    <v-btn variant="text" @click="doLogout">Logout</v-btn>
   </v-app-bar>
 
    <v-dialog v-model="dialog" max-width="420">

@@ -7,6 +7,11 @@ const api = axios.create({
   timeout: 5000,
   headers: { 'Content-Type': 'application/json' }
 });
+const api2 = axios.create({
+  baseURL: "", 
+  timeout: 5000,
+  headers: { 'Content-Type': 'application/json' }
+});
 
 api.interceptors.request.use((config) => {
   const auth = useAuthStore?.();
@@ -29,4 +34,4 @@ api.interceptors.response.use(
   }
 )
 
-export default api;
+export {api ,api2} 
