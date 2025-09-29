@@ -3,15 +3,15 @@
 <v-dialog v-model="dialog" max-width="400">
       <v-card>
         <v-card-title class="text-h6">
-          Conferma eliminazione
+          {{title}}
         </v-card-title>
         <v-card-text>
-          Vuoi davvero procedere con questa azione? 
+          {{text}}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="dialog= false">Annulla</v-btn>
-          <v-btn color="error" @click="onConfirm">Conferma</v-btn>
+          <v-btn variant="text" @click="dialog= false">Cancel</v-btn>
+          <v-btn color="error" @click="onConfirm">Confirm</v-btn>
         </v-card-actions>
       </v-card>
 </v-dialog>
@@ -24,6 +24,14 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  titleDialog: {
+    type: String,
+    default: null
+  },
+  textDialog: {
+    type: String,
+    default: null
+  }
 })
 
 
@@ -33,6 +41,9 @@ const dialog = computed({
   get: () => props.modelValue,
   set: (bool) => emit('update:modelValue',bool)
 })
+const title = computed(() => props.titleDialog)
+const text = computed(() => props.textDialog)
+
 
 function onConfirm() {
   dialog.value = false  

@@ -19,12 +19,12 @@
           </div>
 
           <div class="meta">
-            <div class="label">Anno di uscita</div>
+            <div class="label">Year of release</div>
             <div class="value">{{ movie?.year ?? '—' }}</div>
           </div>
 
           <div class="description">
-            <div class="label">Descrizione</div>
+            <div class="label">Description</div>
             <p>{{ movie?.fullplot ?? '—' }}</p>
           </div>
 
@@ -51,6 +51,8 @@
     </v-card>
      <DialogConfirm 
         v-model="confirmDialog"
+        title-dialog="Delete confirm"
+        text-dialog="You are sure to delete this movie?"
         @confirm="$emit('delete',movie?._id)"
       />
   </v-dialog>

@@ -106,13 +106,13 @@ async function getMovies() {
     console.log("API.get /movies ->", data);
 
     if (data.rc !== 0) {
-      throw new Error(`Errore nella fetch film: ${data.msg}`);
+      throw new Error(`Error in fetch film: ${data.msg}`);
     }
 
     movies.value = Array.isArray(data.data) ? data.data : [];
 
   } catch (err) {
-    console.error("Errore fetch:", err);
+    console.error("Error fetch:", err);
   }
 }
 
@@ -124,7 +124,7 @@ async function getSingleMovie(id){
     dialogInfo.value = true                                
     console.log('API.get /movies/id ->',data)
   } catch (err) {
-    console.error('Errore presa :', err)
+    console.error('Error get :', err)
   }
 }
 
@@ -147,7 +147,7 @@ async function saveMovie(payload){
   }
   getMovies()
   }catch (err) {
-  console.error('Errore presa :', err)
+  console.error('Error post/patch :', err)
   }
 }
 
@@ -163,7 +163,7 @@ async function deleteMovie(id) {
     await getMovies()              
     console.log('Movie deleted:', id, data)
   } catch (err) {
-    console.error('Errore delete:', err)
+    console.error('Error delete:', err)
   }
 }
 

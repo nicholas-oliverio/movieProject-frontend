@@ -11,6 +11,7 @@ declare module 'vue' {
     AppFooter: typeof import('./src/components/layout/AppFooter.vue')['default']
     AppHeader: typeof import('./src/components/layout/AppHeader.vue')['default']
     DialogConfirm: typeof import('./src/components/movie/DialogConfirm.vue')['default']
+    DialogConfirmPokemon: typeof import('./src/components/pokemon/DialogConfirmPokemon.vue')['default']
     DialogfORMMovie: typeof import('./src/components/movie/DialogFormMovie.vue')['default']
     DialogFormMovie: typeof import('./src/components/movie/DialogFormMovie.vue')['default']
     DialogInfoMovie: typeof import('./src/components/movie/DialogInfoMovie.vue')['default']
