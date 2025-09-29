@@ -1,78 +1,173 @@
 <template>
+  <v-toolbar flat style="background-color:#212121; display:flex; flex-direction:row; justify-content:space-between;">
+    <v-toolbar-title>Pokemon</v-toolbar-title>
+    <v-spacer />
+    <v-text-field
+      v-model="pokemonName"
+      density="compact"
+      hide-details
+      clearable
+      placeholder="Search pokemon"
+      prepend-inner-icon="mdi-magnify"
+      class="mr-2"
+      style="max-width: 300px"
+      @keyup.enter="getSinglePokemon(pokemonName)"
+    />
+    <v-btn variant="tonal" class="mr-5" @click="getSinglePokemon(pokemonName)">
+      Search
+    </v-btn>
+  </v-toolbar>
 
-    <v-toolbar flat style="background-color: #212121; display:flex ; flex-direction: row; justify-content: space-between;">
-      <v-toolbar-title>Pokemon</v-toolbar-title>
-      <v-spacer />
-      <v-text-field
-        v-model="pokemonName"
-        density="compact"
-        hide-details
-        clearable
-        placeholder="Search pokemon"
-        prepend-inner-icon="mdi-magnify"
-        class="mr-2"
-        style="max-width: 300px"
-      />
-      <v-btn  variant="tonal" class="mr-5" @click="getSingleMovie(pokemonName)">
-        Search
-      </v-btn>
+  <v-container style="border-top-left-radius:15px; border-top-right-radius:15px; background-color:#212121; margin-top:100px;">
+    <h1 style="font-family:Arial, Helvetica, sans-serif; display:flex; justify-content:center;"><strong>Squadra</strong></h1>
+  </v-container>
 
-    </v-toolbar>
+  <v-container style="border-bottom-left-radius:15px; border-bottom-right-radius:15px; background-color:grey; display:flex; flex-direction:column; height:500px; justify-content:space-around;">
+    <div
+      style="
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5rem;
+        margin: auto;
+        justify-content: space-around;
+      "
+    >
+    
+      <div
+        v-for="i in 6"
+        :key="i"
+        :class="['circle', team.members[i-1] ? 'full' : 'empty']"
+      >
+        <template v-if="team.members[i-1]">
+          <img
+            :src="team.members[i-1].sprites?.front_default || team.members[i-1].sprite"
+            :alt="team.members[i-1].name"
+          />
+        </template>
+        <template v-else>
+          <img
+            src="@/assets/Poké_Ball_icon.svg.png"
+            alt="Pokéball"
+            class="placeholder"
+          />
+        </template>
+      </div>
+    </div>
 
-  <DialogInfoPokemon 
-  v-model="infoPoke"
-  :poke="singlePokemon"
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;">
+    <v-btn class="mr-5" @click="getSinglePokemon(pokemonName)">
+      info
+    </v-btn>
+    <v-btn class="mr-5" @click="getSinglePokemon(pokemonName)">
+      Altro
+    </v-btn>
+</div>
+  </v-container>
+
+  <DialogInfoPokemon
+    v-model="infoPoke"
+    :poke="singlePokemon"
+    @add="addSquad"
   />
-  
 </template>
 
-
 <script setup>
-import { onMounted , ref} from 'vue';
-import {api2} from  "@/axios"
-import DialogInfoPokemon from './DialogInfoPokemon.vue';
+import { onMounted, ref, nextTick } from 'vue'
+import { api, api2 } from '@/axios'
+import DialogInfoPokemon from './DialogInfoPokemon.vue'
 
-
-const pokemon = ref([])
 const singlePokemon = ref(null)
 const infoPoke = ref(false)
-const pokemonName = ref("");
+const pokemonName = ref('')
 
-onMounted(() => {
-  fetchPokemon();
-});
+const team = ref({
+  id: 'team-1',
+  members: [null, null, null, null, null, null], 
+})
 
-async function fetchPokemon(){
-  try{
-    const {data} = await api2.get('https://pokeapi.co/api/v2/pokemon')
-    pokemon.value = Array.isArray(data?.results) ? data.results : [];
-  }catch(err){
-    console.error(err)
+function toSixSlots(arr = []) {
+  return [...arr, null, null, null, null, null].slice(0, 6)
+}
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get(`/pokemon/team-1`)
+    const members = data?.data?.members ?? []
+    team.value.members = toSixSlots(members)
+  } catch (err) {
+    console.error('Errore caricamento team:', err)
+  }
+})
+
+async function getSinglePokemon(name) {
+  try {
+    if (!name) return
+    const { data } = await api2.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
+    singlePokemon.value = data
+    await nextTick()
+    infoPoke.value = true
+  } catch (err) {
+    console.error('Pokemon inesistente all interno del Database',err)
   }
 }
 
-async function getSingleMovie(name) {
-  try{
-
-  const {data} = await api2.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
-  singlePokemon.value = data;  
-  await nextTick()
-  infoPoke.value = true;
-  console.log(singlePokemon.value)
-  }catch(err){
-    console.error(err)
+async function addSquad(poke) {
+  infoPoke.value = false
+  const payload = {
+    id: poke.id,
+    name: poke.name,
+    species: poke.species?.name ?? poke.species,
+    sprites: { front_default: poke.sprites?.front_default },
+    level: 1,
+    types: (poke.types || []).map(t => t.type?.name ?? t),
   }
+  try {
+    const idx = team.value.members.findIndex(m => m == null)
+    if (idx !== -1) {
+    const { data } = await api.patch('/pokemon/team-1', payload)
+    console.log('API.patch /pokemon/team-1 ->', data)
+      team.value.members[idx] = payload
+    } else {
+      console.log('Team pieno: impossibile aggiungere localmente')
+    }
+    } catch (err) {
+    console.error(err)
+    }
 }
-
-
-
 </script>
 
 <style scoped>
+.circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-fit: contain;
+  opacity: 0.7;
+}
+
+.full {
+  border: 8px solid #333;
+  border-color: #ffffff;
+  background-color: rgba(201, 210, 218, 0.708);
+}
+
+.empty {
+  border-color: blue;
+}
 .modalContainer {
   padding: 16px;               
   border-radius: 16px;
+  background-color: #333;
 }
 
 .content {

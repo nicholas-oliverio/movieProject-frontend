@@ -24,6 +24,7 @@
     </v-col>
      <v-col cols="12" class="d-flex justify-center mt-4">
         <v-btn @click="close()">Close</v-btn>
+        <v-btn @click="add(poke)">Add</v-btn>
       </v-col>
   </v-row>
 </v-container>
@@ -44,7 +45,10 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits([
+  'update:modelValue',
+  'add'
+])
 
 const dialog = computed({
     get: () => props.modelValue,
@@ -52,5 +56,8 @@ const dialog = computed({
 })
 function close () {
   dialog.value = false
+}
+function add(poke){
+  emit('add',poke)
 }
 </script>
