@@ -1,5 +1,5 @@
 <template>
-  <v-data-table
+  <v-data-table 
   :headers="headers"
   :items="movies"  
   :items-per-page="30"
@@ -82,14 +82,19 @@ const headers = [
 ]
 
 const dialogInfo = ref(false);
-const dialogForm = ref(false)
+const dialogForm = ref(false);
+const loading = ref(false)
 const movies = ref([]);    
 const selectedMovie = ref(null);
 const searchName = ref('')
 const searchYear = ref('')
 const searchGenres = ref('')
 const titleForm = computed(() => (selectedMovie.value ? 'edit' : 'add'))
-onMounted(getMovies)
+onMounted(
+  loading.value = true,
+  getMovies(),
+  loading.value = false
+)
  
 async function getMovies() {
   try {

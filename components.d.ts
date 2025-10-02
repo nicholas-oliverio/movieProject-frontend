@@ -21,7 +21,9 @@ declare module 'vue' {
     HomeMovie: typeof import('./src/components/movie/Movie.vue')['default']
     Login: typeof import('./src/components/Login.vue')['default']
     Movie: typeof import('./src/components/movie/Movie.vue')['default']
+    PokeArena: typeof import('./src/components/pokearena/PokeArena.vue')['default']
     Pokemon: typeof import('./src/components/pokemon/Pokemon.vue')['default']
+    PokemonEnemie: typeof import('./src/components/pokemonEnemie/PokemonEnemie.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

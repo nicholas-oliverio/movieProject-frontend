@@ -4,9 +4,9 @@ meta:
   requiresAuth: true
 </route>
 <template>
-  <div className="flex flex-col min-h-screen">
+  <div class="flex flex-col min-h-screen">
     <AppHeader />
-      <div className="flex-1 overflow-auto p-4">
+      <div class="flex-1 overflow-auto p-4">
         <Movie />
       </div>
     <AppFooter />

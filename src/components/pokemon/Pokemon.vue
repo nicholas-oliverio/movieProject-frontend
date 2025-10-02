@@ -18,13 +18,13 @@
     </v-btn>
   </v-toolbar>
 
-  <v-container style="border-top-left-radius:15px; border-top-right-radius:15px; background-color:#c33232; margin-top:100px;border-bottom: 10px solid #000; height: 100px;">
+  <v-container style="border-top-left-radius:15px; border-top-right-radius:15px; background-color:#c33232; margin-top:100px;border-bottom: 10px solid #000; height: 100px; width: 900px">
     <h1 style="font-family:Arial, Helvetica, sans-serif; display:flex; justify-content:center; color: white;">
       <strong>My Team</strong>
     </h1>
   </v-container>
 
-  <v-container style="border-bottom-left-radius:15px; border-bottom-right-radius:15px; background-color:grey; display:flex; flex-direction:column; height:500px; justify-content:space-around;">
+  <v-container style="border-bottom-left-radius:15px; border-bottom-right-radius:15px; background-color:grey; display:flex; flex-direction:column; height:500px; width: 900px; justify-content:space-around;">
     <div style="display: grid; grid-template-columns: repeat(3, 1fr);gap: 5rem;margin: auto;justify-content: space-around;">
       <div
         v-for="i in 6"
@@ -59,8 +59,11 @@
     <v-btn v-if="!openEdit" style="font-family: Arial, Helvetica, sans-serif;font-weight: bold; color: white; border-radius: 15px; background-color: #262626;" class="mr-5" @click="opendEdit(team.members)">
       Edit Team
     </v-btn>
-    <v-btn v-if="openEdit" style="font-family: Arial, Helvetica, sans-serif;font-weight: bold; color: white; border-radius: 15px; background-color: #262626;" class="mr-5" @click="openEdit = !opendEdit">
+    <v-btn v-if="openEdit"  style="background-color:#c33232;color: white; font-family: Arial, Helvetica, sans-serif;font-weight: bold; border-radius: 15px;" class="mr-5" @click="openEdit = !opendEdit">
       Close Edit
+    </v-btn>
+    <v-btn style="background-color:#009b6c;color: white; font-family: Arial, Helvetica, sans-serif;font-weight: bold; border-radius: 15px;" class="mr-5"  :to="{ path: '/chooseEnemie' }">
+      Play
     </v-btn>
     </div>
   </v-container>
@@ -129,6 +132,7 @@ async function getSinglePokemon(name) {
     const { data } = await api2.get(`https://pokeapi.co/api/v2/pokemon/${name}`)
     singlePokemon.value = data
     infoPoke.value = true
+    console.log(singlePokemon.value)
   } catch (err) {
     console.error('Pokemon does not exist in the database',err)
   }
@@ -153,11 +157,25 @@ async function openDeleteDialog(name,index){
 
 async function addSquad(poke) {
   infoPoke.value = false
+  const minHp = 67;
+  const maxHp = 150;
+  const minBasic = 4
+  const maxBasic = 12
+  const minSpecial = 13
+  const maxSpecial = 18
   const payload = {
     id: poke.id,
     name: poke.name,
     species: poke.species?.name ?? poke.species,
-    sprites: { front_default: poke.sprites?.front_default },
+    sprites:{ 
+      front_default: poke.sprites?.front_default,
+      back_default: poke.sprites?.back_default,
+     },
+    hp: Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp,
+    attack: {
+      basickAttack : Math.floor(Math.random() * (maxBasic - minBasic + 1)) + minBasic,
+      specialAttack : Math.floor(Math.random() * (maxSpecial - minSpecial + 1)) + minSpecial,
+    },
     level: 1,
     types: (poke.types || []).map(t => t.type?.name ?? t),
   }
@@ -205,9 +223,9 @@ async function removePokemon(object){
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible; 
 }
 .remove-btn {
-
   position: absolute;
   top: 4px;
   right: 4px;
