@@ -125,6 +125,9 @@ import { api,api2 } from '@/axios';
 import { ref , onMounted} from 'vue'
 import { useRouter} from 'vue-router'
 
+const team1Id = ref(false)
+const team2Id = ref(false)
+const team3Id = ref(false)
 const router = useRouter()
 const teams = ref([[],[],[]])
 const loading = ref(true)
@@ -173,16 +176,41 @@ async function fetchEnemieTeam3(){
   }
 }
 
-function chooseEnemie(_id){
-   console.log(_id) 
-   router.push({ path: `/chooseEnemie/arena`, query: { id : _id } })
+async function chooseEnemie(_id){
+   
+    if( _id == 'team-2'){
+      team1Id.value = true
+    }
+    if( _id == 'team-3'){
+      team2Id.value = true
+    }
+    if( _id == 'team-4'){
+      team3Id.value = true
+    }
 
+  router.push(`/chooseEnemie/arena/${_id}`)
 }
 
 onBeforeUnmount(async () => {
  try {
-    await api.patch('/pokemon/reset-enemies')
-    console.log('Team nemici resettati con successo')
+  console.log(team1Id.value)
+  console.log(team2Id.value)
+  console.log(team3Id.value)
+  const payload = []
+  if(team1Id.value){
+    payload.push('team-3','team-4')
+  }
+  if(team2Id.value){
+    payload.push('team-2','team-4')
+  }
+  if(team3Id.value){
+    payload.push('team-2','team-3')
+  }
+  if(!team1Id.value && !team2Id.value && !team3Id.value){
+    payload.push('team-2','team-3','team-4')
+  }
+  await api.patch('/pokemon/reset-enemies',payload)
+  console.log('Team nemici resettati con successo')
   } catch (err) {
     console.error('Errore nel resettare i team nemici:', err)
   }
@@ -234,13 +262,26 @@ async function fetchDetailsForName(names) {
 
 async function updateTeamMembers() {
   try {
-    const teamIds = ['team-2', 'team-3', 'team-4']
+    const teamIds = []
+  if(team1Id.value){
+    teamIds.push('team-3','team-4')
+  }
+  if(team2Id.value){
+    teamIds.push('team-2','team-4')
+  }
+  if(team3Id.value){
+    teamIds.push('team-2','team-3')
+  }
+  if(!team1Id.value && !team2Id.value && !team3Id.value){
+    teamIds.push('team-2','team-3','team-4')
+  }
     const minHp = 67;
     const maxHp = 150;
     const minBasic = 4
     const maxBasic = 12
     const minSpecial = 13
     const maxSpecial = 18
+    const hpValue =  Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp
     for (let i = 0; i < 3; i++) {
 
       for(let y = 0; y < 6; y++){
@@ -254,7 +295,8 @@ async function updateTeamMembers() {
         front_default: teamData[y].sprites?.front_default,
         back_default: teamData[y].sprites?.back_default,
         },
-        hp: Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp,
+        hp: hpValue,
+        maxHp: hpValue,
         attack: {
           basickAttack : Math.floor(Math.random() * (maxBasic - minBasic + 1)) + minBasic,
           specialAttack : Math.floor(Math.random() * (maxSpecial - minSpecial + 1)) + minSpecial,
@@ -364,22 +406,9 @@ async function updateTeamMembers() {
 
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-12px); }
+  40% { transform: translateY(-8px); }
   60% { transform: translateY(-6px); }
 }
 .pokemon-bounce { animation: bounce 1.9s ease infinite; }
 
-@media (max-width: 1120px) {
-  .teams-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    gap: 12px;
-  }
-  .team-1, .team-2, .team-3 {
-    grid-column: 1;
-    grid-row: auto;
-  }
-  .team-box { width: 100%; max-width: 420px; }
-  .slot { height: 80px; }
-}
 </style>

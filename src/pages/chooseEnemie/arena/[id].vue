@@ -1,9 +1,3 @@
-<route lang="yaml">
-  path: /chooseEnemie/arena
-  meta:
-  requiresAuth: true
-</route>
-
 <template>
   <div class="flex flex-col min-h-screen">
     <AppHeader />

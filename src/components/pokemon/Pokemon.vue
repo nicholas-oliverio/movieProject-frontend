@@ -163,6 +163,8 @@ async function addSquad(poke) {
   const maxBasic = 12
   const minSpecial = 13
   const maxSpecial = 18
+  const hpValue =   Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp
+
   const payload = {
     id: poke.id,
     name: poke.name,
@@ -171,7 +173,8 @@ async function addSquad(poke) {
       front_default: poke.sprites?.front_default,
       back_default: poke.sprites?.back_default,
      },
-    hp: Math.floor(Math.random() * (maxHp - minHp + 1)) + minHp,
+    hp: hpValue,
+    maxHp: hpValue,
     attack: {
       basickAttack : Math.floor(Math.random() * (maxBasic - minBasic + 1)) + minBasic,
       specialAttack : Math.floor(Math.random() * (maxSpecial - minSpecial + 1)) + minSpecial,
